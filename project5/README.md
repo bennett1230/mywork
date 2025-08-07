@@ -1,31 +1,38 @@
 "# Project 5" 
-# 简介
-本实验实现了国密SM2椭圆曲线数字签名算法的基础版和优化版，均为纯Python实现，不依赖第三方国密库。
+# 一、基础实现（仿射坐标）
+## 1. 椭圆曲线点运算
+点加（point_add_basic）
+按照椭圆曲线的仿射坐标公式实现，涉及一次逆元运算（即除法）。
+点倍乘（point_double_basic）
+也是仿射坐标公式，涉及一次逆元运算。
+标量乘（scalar_mult_basic）
+采用“二进制法”逐位扫描私钥，循环调用点加和点倍乘，效率较低。
+## 2. 逆元运算
+inverse_mod_basic
+用扩展欧几里得算法实现模逆元，纯Python实现，速度一般。
+## 3. 签名与验签
+签名（sign_basic）
+生成随机数k，计算kG，得到r和s，流程与SM2标准一致。
+验签（verify_basic）
+计算sG + tP，判断结果是否等于r。
 
-基础实现采用普通仿射坐标，便于理解SM2算法原理。
-优化实现通过学习gmssl库的优化方法，采用Jacobian坐标加速椭圆曲线点乘，并输出国密标准的签名格式，性能和兼容性更好。
-## 代码结构
-### 1. 椭圆曲线参数
-定义了SM2推荐的椭圆曲线参数，包括素数p、系数a、b、基点G、阶n等。
-
-### 2. 基础实现部分
-逆元计算：inverse_mod，用于模逆运算。
-
-点加/点倍加/标量乘：point_add、point_double、scalar_mult，实现椭圆曲线上的基本运算。
-
-密钥生成：gen_keypair_basic，生成私钥和公钥。
-
-哈希函数：hash_msg，默认用SHA256（可替换为SM3）。
-
-签名/验签：sign_basic、verify_basic，实现SM2签名与验签，签名输出为(r, s)元组。
-
-### 3. 优化实现部分（Jacobian坐标）
-Jacobian点加/点倍加/标量乘：jacobian_add、jacobian_double、jacobian_mult，大幅减少逆元运算，提高点乘效率。
-
-Jacobian转仿射坐标：jacobian_to_affine，便于输出标准公钥。
-
-签名格式转换：int_to_hex、sig_to_hex，将签名(r, s)拼接为64字节16进制字符串，兼容国密标准。
-
-密钥生成：gen_keypair_optimized，Jacobian坐标下生成密钥对。
-
-签名/验签：sign_optimized、verify_optimized，优化版SM2签名与验签，签名输出为国密格式字符串。
+# 二、手动优化实现（Jacobian坐标+内置pow逆元）
+## 1. 椭圆曲线点运算优化
+Jacobian坐标
+点加、点倍乘都在Jacobian坐标下进行，避免了每次都做逆元运算。
+只有在最终需要输出仿射坐标时，才做一次逆元运算，极大提升效率。
+点加（jacobian_add）/点倍乘（jacobian_double）
+采用Jacobian坐标公式，全部用模乘和模加，速度快。
+Jacobian转仿射（jacobian_to_affine）
+只在最后一步做一次逆元。
+## 2. 逆元运算优化
+inverse_mod
+直接用Python 3.8+的pow(a, -1, m)，比扩展欧几里得算法快很多。
+## 3. 标量乘优化
+scalar_mult_jacobian
+仍用二进制法，但每步都在Jacobian坐标下进行，效率提升显著。
+## 4. 签名与验签
+签名（sign_optimized）
+与基础实现流程一致，只是点乘用Jacobian坐标加速。
+验签（verify_optimized）
+由于验签涉及点加，仍用仿射坐标（如需进一步优化可用Jacobian点加）。
