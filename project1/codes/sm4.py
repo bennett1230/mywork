@@ -1,9 +1,6 @@
 import time
 
 class SM4:
-    """
-    SM4加密算法基础实现（可交互版本）
-    """
 
     # S盒
     S_BOX = [
@@ -106,7 +103,7 @@ class SM4:
         return x0 ^ self._t(x1 ^ x2 ^ x3 ^ rk)
 
     def _crypt(self, input_data, decrypt=False):
-        """加/解密函数（添加计时）"""
+        """加/解密函数"""
         if len(input_data) != 16:
             raise ValueError("SM4 block size must be 16 bytes (128 bits)")
 
@@ -149,11 +146,10 @@ class SM4:
 
 
 def interactive_demo():
-    """交互式演示函数"""
+
     print("SM4加密算法交互演示")
     print("=" * 40)
 
-    # 输入密钥
     while True:
         key_hex = input("请输入16字节(32字符)的16进制密钥(例如:0123456789abcdeffedcba9876543210): ").strip()
         try:
@@ -166,7 +162,6 @@ def interactive_demo():
 
     sm4 = SM4(key)
 
-    # 选择模式
     while True:
         print("\n请选择操作:")
         print("1. 加密")
@@ -182,7 +177,6 @@ def interactive_demo():
             print("无效选择，请重新输入")
             continue
 
-        # 输入数据
         while True:
             data_hex = input("请输入16字节(32字符)的16进制数据: ").strip()
             try:
@@ -193,7 +187,6 @@ def interactive_demo():
             except ValueError as e:
                 print(f"无效输入: {e}")
 
-        # 执行操作
         start_time = time.perf_counter()
         if choice == '1':
             result = sm4.encrypt(data)
@@ -215,4 +208,5 @@ def interactive_demo():
 
 
 if __name__ == "__main__":
+
     interactive_demo()
